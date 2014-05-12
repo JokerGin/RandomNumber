@@ -1,0 +1,87 @@
+#include <cmath>
+#include <stdlib.h>
+#include <stdio.h>
+#include <iostream>
+#define  error -1
+#define  pai 3.141592653589793238462
+using namespace std;
+
+long double rand01()          //0~1之间随机数生成
+{
+	long double X,Y,Z,M;
+	X=rand();
+	Y=rand();
+	Z=X*(RAND_MAX+1)+Y;
+	M=(RAND_MAX+1)*(RAND_MAX+1)-1;
+	return Z/M;
+}
+
+long double Ck(int n)          //逆误差函数级数近似中ck项
+{
+    if(n==0) return 1.0;
+    int m;
+    long double sum=0;
+    for(m=0;m<n;m=m+1) sum=sum+Ck(m)*Ck(n-1-m)/(m+1)/(2*m+1);
+    return sum;
+}
+
+long double IERF(long double Z)          //逆误差函数计算
+{
+    int n;
+    long double sum=0;
+    for(n=0;n<10;n=n+1)          //根据需求定大小，数值越大，越精确
+        sum=sum+Ck(n)/(2*n+1)*pow((Z*sqrt(pai)/2),2*n+1);
+    return sum;
+}
+
+long double NorDistri(long double EXP,long double VAR,long double RAND01 )
+{
+	return sqrt(2.0)*VAR*IERF(2*RAND01-1)+EXP;
+
+}
+
+long double ExpCaculate(long double *NUM,int amount)
+{
+	int n;
+	long double sum=0;
+	for(n=0;n<amount;n=n+1) sum=sum+NUM[n];
+	return sum/amount;
+}
+
+long double VarCaculate(long double *NUM,int amount)
+{
+	int n;
+	long double sum=0;
+	for(n=0;n<amount;n=n+1) sum=sum+NUM[n]*NUM[n];
+	return sum/amount-ExpCaculate(NUM,amount)*ExpCaculate(NUM,amount);
+}
+
+int main()
+{
+	int amount,n;
+	long double *NUM;
+	long double RAND01,EXP,VAR;          //理论值
+	long double CacExp,CacVar;          //计算值
+	cout<<"请输入正态分布期望μ和标准差δ：\n";
+	cout<<"期望   μ = ";cin>>EXP;
+	cout<<"标准差 δ = ";cin>>VAR;
+	if(!VAR) return error;
+	cout<<"请输入输出的正太分布数的个数：\n";
+	cin>>amount;
+	NUM=(long double *)malloc(sizeof(long double)*amount);
+	if(!NUM) return error;
+	for(n=0;n<amount;n=n+1) 
+	{
+		RAND01=rand01();
+		NUM[n]=NorDistri(EXP,VAR,RAND01);
+		cout<<NUM[n]<<endl;
+	}
+	cout<<"END\n";
+	CacExp=ExpCaculate(NUM,amount);
+	CacVar=VarCaculate(NUM,amount);
+	cout<<"经取样所得样本的期望  μ  = "<<CacExp<<endl;
+	cout<<"经取样所得样本的方差  δ² = "<<CacVar<<endl;
+	cout<<"经取样所得样本的标准差δ  = "<<sqrt(CacVar)<<endl;
+	cin>>n;
+	return 0;
+}
