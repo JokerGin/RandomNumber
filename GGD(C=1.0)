@@ -1,0 +1,85 @@
+#include <cmath>
+#include <stdlib.h>
+#include <stdio.h>
+#include <iostream>
+#define  error -1
+#define  pai 3.141592653589793238462
+using namespace std;
+
+long double sgn(long double d)
+{
+	if (d>0) return 1.0;
+	if (d==0) return 0.0;
+	if (d<0) return -1.0;
+}
+
+long double rand01()          //0~1之间随机数生成
+{
+	long double X,Y,Z,M;
+	X=rand();
+	Y=rand();
+	Z=X*(RAND_MAX+1)+Y;
+	M=(RAND_MAX+1)*(RAND_MAX+1)-1;
+	return Z/M;
+}
+
+long double  ILaplace(long double EXP,long double B,long double RAND01 )          //逆拉普拉斯累积分布函数
+{
+	return EXP-B*sgn(RAND01-0.5)*log(1-2*fabs(RAND01-0.5));
+
+}
+
+long double ExpCaculate(long double *NUM,int amount)
+{
+	int n;
+	long double sum=0;
+	for(n=0;n<amount;n=n+1) sum=sum+NUM[n];
+	return sum/amount;
+}
+
+long double ExpAbsCaculate(long double *NUM,int amount)
+{
+	int n;
+	long double sum=0;
+	for(n=0;n<amount;n=n+1) sum=fabs(sum)+NUM[n];
+	return sum/amount;
+}
+
+long double VarCaculate(long double *NUM,int amount)
+{
+	int n;
+	long double sum=0;
+	for(n=0;n<amount;n=n+1) sum=sum+NUM[n]*NUM[n];
+	return sum/amount-ExpCaculate(NUM,amount)*ExpCaculate(NUM,amount);
+}
+
+int main()
+{
+	int amount,n;
+	long double *NUM;
+	long double RAND01,EXP,VAR,B;          //理论值，EXP位置参数，B=VAR/√2尺度参数？
+	long double CacExp,CacVar;          //计算值
+	cout<<"请输入GGD分布（C=1.0）的标准差δ：\n";
+	EXP=0;          //GGD分布（C=1.0）位置参数默认为0
+	cout<<"标准差 δ = ";cin>>VAR;
+    B=VAR/sqrt(2.0);
+	cout<<"请输入输出的GGD分布（C=1.0）数的个数：\n";
+	cin>>amount;
+	NUM=(long double *)malloc(sizeof(long double)*amount);
+	if(!NUM) return error;
+	for(n=0;n<amount;n=n+1) 
+	{
+		RAND01=rand01();
+		NUM[n]=ILaplace(EXP,B,RAND01);
+		cout<<NUM[n]<<endl;
+	}
+	cout<<"END\n";
+	CacExp=ExpCaculate(NUM,amount);
+	CacVar=VarCaculate(NUM,amount);
+	cout<<"经取样所得样本的期望  μ  = "<<CacExp<<endl;
+	cout<<"经取样所得样本的方差  δ² = "<<CacVar<<endl;
+	cout<<"经取样所得样本的标准差δ  = "<<sqrt(CacVar)<<endl;
+    cout<<"经取样所得样本的尺度参数B  = "<<sqrt(CacVar)/sqrt(2.0)<<endl;
+	cin>>n;
+	return 0;
+}
